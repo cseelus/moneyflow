@@ -19,6 +19,21 @@ npm run dev
 
 The application will start on `localhost:3000`.
 
+## Wallet Connection
+
+This application supports Solana wallet connection using Phantom wallet.
+
+### Setup
+
+1. Install the Phantom browser extension from [phantom.app](https://phantom.app/)
+2. (Optional) Set `NEXT_PUBLIC_SOLANA_RPC` environment variable to a custom Solana RPC endpoint. If not set, the application will use Devnet by default.
+
+### Usage
+
+- Click the "Connect Wallet" button to connect your Phantom wallet
+- After approval, your wallet's public key will be displayed
+- The application works against Solana Devnet by default
+
 ## Styling
 
 This project uses **Tailwind CSS** for utility-first styling and **shadcn/ui** for consistent, accessible UI components.

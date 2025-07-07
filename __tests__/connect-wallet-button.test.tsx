@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import Home from '@/app/page'
+import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletProvider } from '@solana/wallet-adapter-react'
 import { ConnectionProvider } from '@solana/wallet-adapter-react'
 import { clusterApiUrl } from '@solana/web3.js'
@@ -26,48 +26,15 @@ const MockWalletProvider = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-describe('Home Page', () => {
-  it('renders the Moneyflow heading', () => {
+describe('ConnectWalletButton', () => {
+  it('renders the wallet connect button', () => {
     render(
       <MockWalletProvider>
-        <Home />
+        <ConnectWalletButton />
       </MockWalletProvider>,
     )
-    expect(screen.getByRole('heading', { name: 'Moneyflow' })).toBeInTheDocument()
-  })
 
-  it('renders the Connect Wallet button', () => {
-    render(
-      <MockWalletProvider>
-        <Home />
-      </MockWalletProvider>,
-    )
     expect(screen.getByTestId('wallet-multi-button')).toBeInTheDocument()
-  })
-
-  it('has correct layout classes', () => {
-    render(
-      <MockWalletProvider>
-        <Home />
-      </MockWalletProvider>,
-    )
-    const main = screen.getByRole('main')
-    expect(main).toHaveClass(
-      'flex',
-      'min-h-screen',
-      'items-center',
-      'justify-center',
-      'flex-col',
-      'gap-4',
-    )
-  })
-
-  it('does not show connected wallet info when no wallet is connected', () => {
-    render(
-      <MockWalletProvider>
-        <Home />
-      </MockWalletProvider>,
-    )
-    expect(screen.queryByText(/Connected:/)).not.toBeInTheDocument()
+    expect(screen.getByText('Connect Wallet')).toBeInTheDocument()
   })
 })

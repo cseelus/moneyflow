@@ -1,11 +1,17 @@
+'use client'
 import React from 'react'
-import { Button } from '@/components/ui/button'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 
 export default function Home() {
+  const { publicKey } = useWallet()
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-3xl font-semibold mr-4">Moneyflow</h1>
-      <Button>Get started</Button>
+    <main className="flex min-h-screen items-center justify-center flex-col gap-4">
+      <h1 className="text-3xl font-semibold">Moneyflow</h1>
+      <ConnectWalletButton />
+      {publicKey && (
+        <p className="text-sm text-muted-foreground">Connected: {publicKey.toBase58()}</p>
+      )}
     </main>
   )
 }

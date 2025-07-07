@@ -2,6 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
+import { SolanaProviders } from '@/providers/solana-wallet'
 import DarkModeProvider from './components/DarkModeProvider'
 
 const geistSans = Geist({
@@ -28,7 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <DarkModeProvider />
-        {children}
+        <SolanaProviders>{children}</SolanaProviders>
       </body>
     </html>
   )
