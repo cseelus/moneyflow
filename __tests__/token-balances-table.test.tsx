@@ -32,7 +32,7 @@ describe('TokenBalancesTable', () => {
     })
 
     render(<TokenBalancesTable />)
-    
+
     // Component should not render anything
     expect(screen.queryByText('Token Balances')).not.toBeInTheDocument()
   })
@@ -45,11 +45,11 @@ describe('TokenBalancesTable', () => {
 
     // Mock token service to delay response
     ;(getTokenBalances as any).mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve([]), 100))
+      () => new Promise((resolve) => setTimeout(() => resolve([]), 100)),
     )
 
     render(<TokenBalancesTable />)
-    
+
     // Should show loading state
     expect(screen.getByText('Loading token balances...')).toBeInTheDocument()
   })
@@ -64,7 +64,7 @@ describe('TokenBalancesTable', () => {
     ;(getTokenBalances as any).mockResolvedValue([])
 
     render(<TokenBalancesTable />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('No tokens found in this wallet.')).toBeInTheDocument()
     })
@@ -97,18 +97,18 @@ describe('TokenBalancesTable', () => {
         logoURI: 'https://example.com/usdc.png',
       },
     ]
-    
+
     ;(getTokenBalances as any).mockResolvedValue(mockTokens)
 
     render(<TokenBalancesTable />)
-    
+
     await waitFor(() => {
       // Check table headers
       expect(screen.getByText('Token name')).toBeInTheDocument()
       expect(screen.getByText('Token value')).toBeInTheDocument()
       expect(screen.getByText('Token amount')).toBeInTheDocument()
       expect(screen.getByText('Total value (USD)')).toBeInTheDocument()
-      
+
       // Check token data
       expect(screen.getByText(/Solana \(SOL\)/)).toBeInTheDocument()
       expect(screen.getByText(/USD Coin \(USDC\)/)).toBeInTheDocument()
@@ -125,9 +125,11 @@ describe('TokenBalancesTable', () => {
     ;(getTokenBalances as any).mockRejectedValue(new Error('API error'))
 
     render(<TokenBalancesTable />)
-    
+
     await waitFor(() => {
-      expect(screen.getByText('Failed to fetch token balances. Please try again.')).toBeInTheDocument()
+      expect(
+        screen.getByText('Failed to fetch token balances. Please try again.'),
+      ).toBeInTheDocument()
     })
   })
 })

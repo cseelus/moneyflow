@@ -26,9 +26,9 @@ const helius = new Helius(HELIUS_API_KEY)
 
 // Map of token mint addresses to CoinGecko IDs
 const TOKEN_MINT_TO_COINGECKO_ID: Record<string, string> = {
-  'So11111111111111111111111111111111111111112': 'solana', // SOL
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': 'usd-coin', // USDC
-  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': 'tether', // USDT
+  So11111111111111111111111111111111111111112: 'solana', // SOL
+  EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: 'usd-coin', // USDC
+  Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: 'tether', // USDT
   // Add more token mappings as needed
 }
 
@@ -38,8 +38,8 @@ const TOKEN_MINT_TO_COINGECKO_ID: Record<string, string> = {
 export async function getTokenBalances(walletAddress: string): Promise<Token[]> {
   try {
     // Fetch token balances from Helius
-    const balances = await helius.rpc.getBalances({ 
-      accounts: [walletAddress] 
+    const balances = await helius.rpc.getBalances({
+      accounts: [walletAddress],
     })
 
     if (!balances || !balances.tokens || !balances.nativeBalance) {
@@ -59,7 +59,8 @@ export async function getTokenBalances(walletAddress: string): Promise<Token[]> 
         decimals: 9,
         valuePerToken: 0, // Will be updated with price data
         totalValue: 0, // Will be updated with price data
-        logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
+        logoURI:
+          'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
       })
     }
 
@@ -93,14 +94,15 @@ async function updateTokenPrices(tokens: Token[], splTokens: any[]): Promise<Tok
   try {
     // Create a map of token mints
     const tokenMintMap = new Map()
-    splTokens.forEach(token => {
+    splTokens.forEach((token) => {
       tokenMintMap.set(token.symbol, token.mint)
     })
 
     // Get list of CoinGecko IDs to fetch
     const coinGeckoIds = tokens
-      .map(token => {
-        const mint = tokenMintMap.get(token.symbol) || 
+      .map((token) => {
+        const mint =
+          tokenMintMap.get(token.symbol) ||
           (token.symbol === 'SOL' ? 'So11111111111111111111111111111111111111112' : null)
         return mint ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
       })
@@ -117,19 +119,22 @@ async function updateTokenPrices(tokens: Token[], splTokens: any[]): Promise<Tok
     })
 
     // Update token prices
-    return tokens.map(token => {
-      const mint = tokenMintMap.get(token.symbol) || 
-        (token.symbol === 'SOL' ? 'So11111111111111111111111111111111111111112' : null)
-      
-      const coinGeckoId = mint ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
-      const price = coinGeckoId && priceData[coinGeckoId]?.usd ? priceData[coinGeckoId].usd : 0
+    return tokens
+      .map((token) => {
+        const mint =
+          tokenMintMap.get(token.symbol) ||
+          (token.symbol === 'SOL' ? 'So11111111111111111111111111111111111111112' : null)
 
-      return {
-        ...token,
-        valuePerToken: price,
-        totalValue: token.amount * price,
-      }
-    }).sort((a, b) => b.totalValue - a.totalValue) // Sort by total value (highest first)
+        const coinGeckoId = mint ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
+        const price = coinGeckoId && priceData[coinGeckoId]?.usd ? priceData[coinGeckoId].usd : 0
+
+        return {
+          ...token,
+          valuePerToken: price,
+          totalValue: token.amount * price,
+        }
+      })
+      .sort((a, b) => b.totalValue - a.totalValue) // Sort by total value (highest first)
   } catch (error) {
     console.error('Error updating token prices:', error)
     return tokens

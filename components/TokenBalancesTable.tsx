@@ -77,37 +77,25 @@ export const TokenBalancesTable: React.FC = () => {
           </thead>
           <tbody>
             {tokens.map((token, index) => (
-              <tr
-                key={index}
-                className="border-b border-gray-200 dark:border-gray-700"
-              >
+              <tr key={index} className="border-b border-gray-200 dark:border-gray-700">
                 <td className="py-3 px-4 flex items-center">
                   {token.logoURI && (
-                    <img
-                      src={token.logoURI}
-                      alt={token.symbol}
-                      className="w-5 h-5 mr-2 rounded-full"
-                      onError={(e) => {
-                        // Hide broken images
-                        (e.target as HTMLImageElement).style.display = 'none'
-                      }}
+                    <div
+                      className="w-5 h-5 mr-2 rounded-full bg-contain bg-no-repeat bg-center"
+                      style={{ backgroundImage: `url(${token.logoURI})` }}
                     />
                   )}
                   <span>
                     {token.name} ({token.symbol})
                   </span>
                 </td>
-                <td className="py-3 px-4 text-right">
-                  ${token.valuePerToken.toFixed(2)}
-                </td>
+                <td className="py-3 px-4 text-right">${token.valuePerToken.toFixed(2)}</td>
                 <td className="py-3 px-4 text-right">
                   {token.amount.toLocaleString(undefined, {
                     maximumFractionDigits: 6,
                   })}
                 </td>
-                <td className="py-3 px-4 text-right">
-                  ${token.totalValue.toFixed(2)}
-                </td>
+                <td className="py-3 px-4 text-right">${token.totalValue.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
