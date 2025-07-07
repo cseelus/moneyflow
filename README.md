@@ -1,5 +1,7 @@
 # moneyflow
 
+![CI](https://github.com/cseelus/moneyflow/actions/workflows/ci.yml/badge.svg)
+
 Track and visualize your monetary assets over time
 
 ## Setup
