@@ -22,6 +22,8 @@
     "@solana/web3.js": "^1.98.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "coingecko-api-v3": "^0.0.31",
+    "helius-sdk": "^1.5.1",
     "next": "15.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
