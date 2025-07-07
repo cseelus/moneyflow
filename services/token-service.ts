@@ -37,25 +37,18 @@ const TOKEN_MINT_TO_COINGECKO_ID: Record<string, string> = {
  */
 export async function getTokenBalances(walletAddress: string): Promise<Token[]> {
   try {
-    // Fetch token balances from Helius
-    const balances = await helius.rpc.getBalances({
-      accounts: [walletAddress],
-    })
-
-    if (!balances || !balances.tokens || !balances.nativeBalance) {
-      return []
-    }
-
     // Create array to hold all tokens including SOL
     const tokens: Token[] = []
 
-    // Add SOL balance
-    const solBalance = balances.nativeBalance / 1e9 // Convert lamports to SOL
-    if (solBalance > 0) {
+    // Get SOL balance
+    const solBalance = await helius.connection.getBalance(new PublicKey(walletAddress))
+    const solAmount = solBalance / 1e9 // Convert lamports to SOL
+
+    if (solAmount > 0) {
       tokens.push({
         name: 'Solana',
         symbol: 'SOL',
-        amount: solBalance,
+        amount: solAmount,
         decimals: 9,
         valuePerToken: 0, // Will be updated with price data
         totalValue: 0, // Will be updated with price data
@@ -64,23 +57,65 @@ export async function getTokenBalances(walletAddress: string): Promise<Token[]> 
       })
     }
 
-    // Add SPL token balances
-    for (const token of balances.tokens) {
-      if (token.amount > 0) {
-        tokens.push({
-          name: token.name || 'Unknown Token',
-          symbol: token.symbol || 'UNKNOWN',
-          amount: token.amount / Math.pow(10, token.decimals),
-          decimals: token.decimals,
-          valuePerToken: 0, // Will be updated with price data
-          totalValue: 0, // Will be updated with price data
-          logoURI: token.logoURI,
-        })
+    // Fetch token accounts using standard Solana RPC method
+    const response = await helius.connection.getTokenAccountsByOwner(new PublicKey(walletAddress), {
+      programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+    })
+
+    // Process token accounts
+    const tokenAccounts = []
+
+    if (response && response.value) {
+      for (const item of response.value) {
+        try {
+          // Parse token account data
+          const accountInfo = item.account
+          const data = accountInfo.data
+
+          // Skip if no data
+          if (!data) continue
+
+          // Parse token account data
+          const accountData = Buffer.from(data)
+
+          // Extract mint address (bytes 0-32)
+          const mintAddress = new PublicKey(accountData.slice(0, 32)).toString()
+
+          // Extract amount (bytes 64-72)
+          const amountData = accountData.slice(64, 72)
+          const amount = Number(amountData.readBigUInt64LE(0))
+
+          if (amount > 0) {
+            tokenAccounts.push({
+              mint: mintAddress,
+              amount: amount,
+              // We'll use default values for other fields
+              decimals: 0, // Will be updated if we have token metadata
+              symbol: 'UNKNOWN',
+              name: 'Unknown Token',
+            })
+          }
+        } catch (err) {
+          console.error('Error parsing token account:', err)
+        }
       }
     }
 
+    // Add token accounts to our tokens array
+    for (const account of tokenAccounts) {
+      tokens.push({
+        name: account.name || 'Unknown Token',
+        symbol: account.symbol || 'UNKNOWN',
+        amount: account.amount / Math.pow(10, account.decimals || 0),
+        decimals: account.decimals || 0,
+        valuePerToken: 0, // Will be updated with price data
+        totalValue: 0, // Will be updated with price data
+        logoURI: '',
+      })
+    }
+
     // Update token prices
-    return await updateTokenPrices(tokens, balances.tokens)
+    return await updateTokenPrices(tokens, tokenAccounts)
   } catch (error) {
     console.error('Error fetching token balances:', error)
     return []
@@ -95,21 +130,26 @@ async function updateTokenPrices(tokens: Token[], splTokens: any[]): Promise<Tok
     // Create a map of token mints
     const tokenMintMap = new Map()
     splTokens.forEach((token) => {
-      tokenMintMap.set(token.symbol, token.mint)
+      if (token.symbol) {
+        tokenMintMap.set(token.symbol, token.mint)
+      }
     })
 
     // Get list of CoinGecko IDs to fetch
     const coinGeckoIds = tokens
       .map((token) => {
-        const mint =
-          tokenMintMap.get(token.symbol) ||
-          (token.symbol === 'SOL' ? 'So11111111111111111111111111111111111111112' : null)
-        return mint ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
+        let mint = null
+        if (token.symbol === 'SOL') {
+          mint = 'So11111111111111111111111111111111111111112'
+        } else {
+          mint = tokenMintMap.get(token.symbol)
+        }
+        return mint && TOKEN_MINT_TO_COINGECKO_ID[mint] ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
       })
       .filter(Boolean)
 
     if (coinGeckoIds.length === 0) {
-      return tokens
+      return tokens.sort((a, b) => b.totalValue - a.totalValue)
     }
 
     // Fetch prices from CoinGecko
@@ -121,11 +161,15 @@ async function updateTokenPrices(tokens: Token[], splTokens: any[]): Promise<Tok
     // Update token prices
     return tokens
       .map((token) => {
-        const mint =
-          tokenMintMap.get(token.symbol) ||
-          (token.symbol === 'SOL' ? 'So11111111111111111111111111111111111111112' : null)
+        let mint = null
+        if (token.symbol === 'SOL') {
+          mint = 'So11111111111111111111111111111111111111112'
+        } else {
+          mint = tokenMintMap.get(token.symbol)
+        }
 
-        const coinGeckoId = mint ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
+        const coinGeckoId =
+          mint && TOKEN_MINT_TO_COINGECKO_ID[mint] ? TOKEN_MINT_TO_COINGECKO_ID[mint] : null
         const price = coinGeckoId && priceData[coinGeckoId]?.usd ? priceData[coinGeckoId].usd : 0
 
         return {
